@@ -1,3 +1,7 @@
+''' Module contains Dataset class, collact for DateLoader and loader getter function.   *
+MiniFlickrDataset loads data from pickle file and returns image embedding and caption.  *
+cl_fn is used to process batch of data and return tensors.  *
+get_loader returns DataLoader object. '''
 import os
 import pickle
 
