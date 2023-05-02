@@ -112,3 +112,91 @@ class Trainer:
                     loop.refresh()
 
         self.valid_loss.append(total_loss / (batch_idx + 1))
+
+    def test_step(self, num_examples=4):
+        assert num_examples % 2 == 0, 'num_examples must be even'
+
+        self.model.eval()
+
+        fig, axs = plt.subplots(num_examples // 2, 2, figsize=(20, 12))
+
+        random_idx = np.random.randint(0, len(self.dataset), size=(num_examples,))
+        for idx, r in enumerate(random_idx):
+            img_name, _, _ = self.dataset[r]
+
+            img = Image.open(os.path.join(self.test_path, img_name))
+
+            with torch.no_grad():
+                caption, _ = self.model(img)
+
+            axs[idx // 2, idx % 2].imshow(img)
+            axs[idx // 2, idx % 2].set_title(caption)
+            axs[idx // 2, idx % 2].axis('off')
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+
+        fig.clear()
+        plt.close(fig)
+
+        self.test_result = Image.open(buf)
+
+    def get_training_data(self):
+        return {
+            'train_loss': self.train_loss,
+            'valid_loss': self.valid_loss,
+            'lr': self.cur_lr,
+            'examples': self.test_result
+        }
+
+    def save_ckp(self, ckp_path):
+        torch.save(
+            {
+                'epoch': self.epoch,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
+                'scheduler_state_dict': self.scheduler.state_dict(),
+                'scaler_state_dict': self.scaler.state_dict(),
+                'tloss': self.train_loss,
+                'vloss': self.valid_loss
+            },
+            ckp_path
+        )
+
+    def _load_ckp(
+            self,
+            checkpoint_fpath,
+            optimizer=False,
+            scheduler=False,
+            scaler=False,
+            epoch=False,
+            train_loss=False,
+            valid_loss=False,
+            device='cpu'
+    ):
+        '''
+            Loads entire checkpoint from file.
+        '''
+
+        checkpoint = torch.load(checkpoint_fpath, map_location=device)
+
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        if optimizer:
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+        if scheduler:
+            self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+
+        if scaler:
+            self.scaler.load_state_dict(checkpoint['scaler_state_dict'])
+
+        if epoch:
+            self.epoch = len(checkpoint['tloss'])
+
+        if train_loss:
+            self.train_loss = checkpoint['tloss']
+
+        if valid_loss:
+            self.valid_loss = checkpoint['vloss']
+
