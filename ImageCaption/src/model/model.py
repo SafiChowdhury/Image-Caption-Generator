@@ -111,8 +111,7 @@ class Net(nn.Module):
         Final Model class. Puts all pieces together and generates caption based on image.
     '''
 
-    def __init__(self, clip_model, text_model, ep_len, num_layers, n_heads, forward_expansion, dropout, max_len,
-                 device='cpu'):
+    def __init__(self, clip_model, text_model, ep_len, num_layers, n_heads, forward_expansion, dropout, max_len, device='cpu'):
         '''
             Model constructor.
             Args:
@@ -128,8 +127,7 @@ class Net(nn.Module):
         self.ep_len = ep_len
 
         self.ie = ImageEncoder(model=clip_model, device=device)
-        self.mp = Mapping(ep_len=self.ep_len, num_layers=num_layers, embed_size=self.ie.model.config.hidden_size,
-                          n_heads=n_heads, forward_expansion=forward_expansion, dropout=dropout, device=device)
+        self.mp = Mapping(ep_len=self.ep_len, num_layers=num_layers, embed_size=self.ie.model.config.hidden_size, n_heads=n_heads, forward_expansion=forward_expansion, dropout=dropout, device=device)
         self.td = TextDecoder(model=text_model, device=device)
 
         assert self.ie.model.config.hidden_size == self.td.model.config.n_embd, "Embedding size of models mismatch"
@@ -142,8 +140,7 @@ class Net(nn.Module):
         self.freeze_layers()
 
     def freeze_layers(self):
-        for p in [*list(self.ie.parameters()), *list(self.td.parameters())[
-                                                14:-14]]:  # freeze everything, except 1st and last transformer layer in Decoder
+        for p in [*list(self.ie.parameters()), *list(self.td.parameters())[14:-14]]: # freeze everything, except 1st and last transformer layer in Decoder
             p.requires_grad = False
 
     def forward(self, img, temperature=1.0):
@@ -236,35 +233,3 @@ class Net(nn.Module):
         return loss
 
 
-if __name__ == '__main__':
-    for clip, text in [['openai/clip-vit-base-patch32', 'gpt2'], ['openai/clip-vit-large-patch14', 'gpt2-medium']]:
-        m = Net(
-            clip_model=clip,
-            text_model=text,
-            ep_len=3,
-            num_layers=6,
-            n_heads=16,
-            forward_expansion=4,
-            dropout=0.1,
-            max_len=20
-        )
-
-        m.eval()
-        r = m(torch.randn(3, 224, 224))
-        print(r)
-
-        m.train()
-        N = 10
-        emb = m.td.model.config.n_embd
-        length = 20
-
-        l = m.train_forward(
-            torch.rand(N, emb),
-            torch.randint(1, 50000, (N, length)),
-            att_mask=torch.concat([torch.ones(N, length - 3), torch.zeros(N, 3)], dim=1)
-        )
-        print(l)
-
-        # number of parameters
-        print(f'Total number of parameters: {sum(p.numel() for p in m.parameters())}')
-        print(f'Number of trainable parameters: {sum(p.numel() for p in m.parameters() if p.requires_grad)}')
