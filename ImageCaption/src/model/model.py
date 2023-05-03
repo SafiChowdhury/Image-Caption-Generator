@@ -10,8 +10,9 @@ class ImageEncoder(nn.Module):
         Encodes image and returns it's embedding.
     '''
 
-    def __int__(self, model, device='cpu'):
-        super(ImageEncoder, self).__int__()
+    def __init__(self, model, device='cpu'):
+        super(ImageEncoder, self).__init__()
+
         self.device = device
 
         self.preprocessor = CLIPProcessor.from_pretrained(model)
@@ -29,7 +30,7 @@ class Mapping(nn.Module):
         Maps image embedding to GPT-2 embedding.
     '''
 
-    def __init(
+    def __init__(
         self,
         ep_len,
         num_layers,
@@ -39,9 +40,11 @@ class Mapping(nn.Module):
         dropout,
         device='cpu'
     ):
-        super(Mapping, self).__init()
+        super(Mapping, self).__init__()
+
         self.ep_len = ep_len
         self.embed_size = embed_size
+
         self.device = device
 
         self.transformer_encoder = nn.TransformerEncoder(
@@ -70,14 +73,14 @@ class Mapping(nn.Module):
                 if train_mode else
                 [self.ep_len, self.embed_size]
             )
-        )  # for batched input
+        ) # for batched input
 
         return x
 
     def init_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weights, mode='fan_in', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
                 nn.init.zeros_(m.bias)
 
             elif isinstance(m, nn.LayerNorm):
@@ -104,7 +107,6 @@ class TextDecoder(nn.Module):
         text_features = self.model(inputs_embeds=embedding, attention_mask=attention_mask)
 
         return text_features.logits
-
 
 class Net(nn.Module):
     '''
@@ -264,6 +266,3 @@ if __name__ == '__main__':
         # number of parameters
         print(f'Total number of parameters: {sum(p.numel() for p in m.parameters())}')
         print(f'Number of trainable parameters: {sum(p.numel() for p in m.parameters() if p.requires_grad)}')
-
-
-
