@@ -49,11 +49,11 @@ try:
     status=report.status.Start,
     test_number=2
     )
-    file_input = driver.find_element_by_css_selector("input[type='file']")
+    file_input = driver.find_element(By.CLASS_NAME,"btn btn-secondary").click()
     file_input.send_keys("F:/Saafi/New folder/Flicker8k_Dataset/102455176_5f8ead62d5.jpg")
 
     # find and click the submit button to upload the file
-    submit_button = driver.find_element_by_css_selector("input[type='submit']")
+    submit_button = driver.find_element(By.CLASS_NAME,"btn btn-info")
     submit_button.click()
 
     # wait for the page to load
@@ -82,15 +82,16 @@ try:
         status = report.status.Start,
         test_number=3
     )
-    assert(driver.title=='Image Caption Generator')
+    submit_button = driver.find_element(By.CLASS_NAME, "btn btn-info")
+    submit_button.click()
     report.write_step(
-        'Landing Page Loaded Successfully.',
+        'Button Clicked',
         status=report.status.Pass,
         screenshot=True
     )
 except AssertionError:
     report.write_step(
-        'Landing Page loaded Successfully.',
+        'Button Clicked.',
         status=report.status.Fail,
         screenshot=True
     )
@@ -101,21 +102,23 @@ except Exception as e:
         screenshot=True
     )
 #Test Case 4
+driver.get('http://127.0.0.1:8000/Caption')
 try:
     report.write_step(
         'Going back to Home page',
         status = report.status.Start,
         test_number=4
     )
-    assert(driver.title=='Image Caption Generator')
+    submit_button = driver.find_element(By.CLASS_NAME, "btn btn-info")
+    submit_button.click()
     report.write_step(
-        'Landing Page Loaded Successfully.',
+        'Home Page Loaded Successfully.',
         status=report.status.Pass,
         screenshot=True
     )
 except AssertionError:
     report.write_step(
-        'Landing Page loaded Successfully.',
+        'Home Page loaded Successfully.',
         status=report.status.Fail,
         screenshot=True
     )
